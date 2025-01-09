@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Bookmarked Websites</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4a90e2;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        #searchBar {
+            margin-top: 10px;
+            padding: 10px;
+            width: 80%;
+            max-width: 500px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        section {
+            margin-bottom: 40px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #4a90e2;
+            font-size: 1.5em;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        .bookmark {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .bookmark:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .bookmark img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            border-radius: 5px;
+        }
+
+        .bookmark a {
+            text-decoration: none;
+            color: #3498db;
+            font-size: 1.1em;
+        }
+
+        .bookmark a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #333;
+            color: white;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Bookmarked Websites</h1>
+        <input type="text" id="searchBar" placeholder="Search bookmarks...">
+    </header>
+    <main>
+        <div id="bookmarks"></div>
+    </main>
+    <footer>
+        <p>&copy; 2025 My Bookmarked Websites</p>
+    </footer>
+    <script>
+        let allLinks = [];
+
+        async function fetchBookmarks() {
+            const response = await fetch('https://raw.githubusercontent.com/Hacking-Notes/Bookmarks/refs/heads/main/Hacking_bookmarks.html');
+            const text = await response.text();
+            return new DOMParser().parseFromString(text, 'text/html');
+        }
+
+        function generateBookmarkList(bookmarks) {
+            const categories = {};
+            const links = bookmarks.querySelectorAll('a');
+
+            links.forEach(link => {
+                const category = link.closest('h3') ? link.closest('h3').innerText : 'Uncategorized';
+                if (!categories[category]) {
+                    categories[category] = [];
+                }
+                categories[category].push(link);
+                allLinks.push(link); // Store all links for search functionality
+            });
+
+            return categories;
+        }
+
+        function renderBookmarks(categories) {
+            const container = document.getElementById('bookmarks');
+            container.innerHTML = ''; // Clear previous content
+            for (const category in categories) {
+                const section = document.createElement('section');
+                section.innerHTML = `<h2>${category}</h2>`;
+                
+                const ul = document.createElement('ul');
+                categories[category].forEach(link => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="bookmark">
+                            <a href="${link.href}">
+                                ${link.innerText}
+                            </a>
+                        </div>`;
+                    ul.appendChild(li);
+                });
+                
+                section.appendChild(ul);
+                container.appendChild(section);
+            }
+        }
+
+        function filterBookmarks(event) {
+            const searchQuery = event.target.value.toLowerCase();
+            const container = document.getElementById('bookmarks');
+            container.innerHTML = '';
+
+            const filteredLinks = allLinks.filter(link => 
+                link.innerText.toLowerCase().includes(searchQuery)
+            );
+
+            const categories = {};
+            filteredLinks.forEach(link => {
+                const category = link.closest('h3') ? link.closest('h3').innerText : 'Uncategorized';
+                if (!categories[category]) {
+                    categories[category] = [];
+                }
+                categories[category].push(link);
+            });
+
+            renderBookmarks(categories);
+        }
+
+        document.getElementById('searchBar').addEventListener('input', filterBookmarks);
+
+        fetchBookmarks().then(bookmarks => {
+            const categories = generateBookmarkList(bookmarks);
+            renderBookmarks(categories);
+        });
+    </script>
+</body>
+</html>
